@@ -12,42 +12,66 @@ enum DeckType:Int, CaseIterable, Codable {
 }
 
 struct Deck: DeckBaseCompatible {
-
+    
     //MARK: - Properties
-
+    
     var cards = [Card]()
     var type: DeckType
     var trump: Suit?
-
+    
     var total:Int {
         return type.rawValue
     }
 }
 
 extension Deck {
-
+    
     init(with type: DeckType) {
         self.type = type
+        self.cards = self.createDeck(suits: Suit.allCases, values: Value.allCases)
     }
-
-    public func createDeck(suits:[Suit], values:[Value]) -> [Card] {
-        []
+    
+    public mutating func createDeck(suits:[Suit], values:[Value]) -> [Card] {
+        var result: [Card] = []
+        for suit in suits {
+            for value in values {
+                result.append(Card(suit: suit, value: value))
+            }
+        }
+        
+        self.cards = result
+        return result
     }
-
-    public func shuffle() {
-
+    
+    public mutating func shuffle() {
+        self.cards.shuffle()
     }
-
-    public func defineTrump() {
-
+    
+    public mutating func defineTrump() {
+        if self.cards.count > 0 {
+            self.trump = self.cards.first!.suit
+            self.setTrumpCards(for: self.trump!)
+        }
     }
-
-    public func initialCardsDealForPlayers(players: [Player]) {
-
+    
+    public mutating func initialCardsDealForPlayers(players: [Player]) {
+        if players.count * 6 <= self.cards.count {
+            for player in players {
+                if nil == player.hand {
+                    player.hand = []
+                }
+                for _ in 1...6 {
+                    player.hand!.append(self.cards.removeFirst())
+                }
+            }
+        }
     }
-
-    public func setTrumpCards(for suit:Suit) {
-
+    
+    public mutating func setTrumpCards(for suit:Suit) {
+        for index in 0...self.cards.count - 1 {
+            if self.cards[index].suit == suit {
+                self.cards[index].isTrump = true
+            }
+        }
     }
 }
-
